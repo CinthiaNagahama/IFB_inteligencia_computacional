@@ -83,11 +83,11 @@ class Graph:
 
   # Busca A*
   # f(n) = g(n) + h(n)
-    #   g(n) -> distância entre nó atual (n) e próximo nó vizinho
+    #   g(n) -> distância entre nó atual (n) e o nó de origem
     #   h(n) -> Distância em linha reta até nó destino
   def a_star_search(self, originNode, destinyNode, h):
     notCheckedNodes = [originNode] # Nós que ainda não foram averiguados
-    checkedNodes = defaultdict(set) # Nós que foram averiguados {sucessor: antecessor}
+    checkedNodes = dict() # Nós que foram averiguados {sucessor: antecessor}
 
     g = {}
     f = {}
@@ -101,8 +101,6 @@ class Graph:
     current = originNode
 
     while(len(notCheckedNodes) != 0):
-      # print("current: ", current, "\nnotCheckedNodes: ", notCheckedNodes, "\ncheckedNodes: ", checkedNodes)
-
       # Atualiza o nó atual com o nó de menor valor f(n) na lista de nós não checados 
       adjF = []
       for node in notCheckedNodes:
@@ -110,8 +108,11 @@ class Graph:
         _h = self.find_h(node, h)
         if(type(_g) == int and type(_h) == int):
           adjF.append((node, _g + _h))
-      current = min(adjF)[0]
+      if(len(adjF) == 0):
+        return "{} não cadastrada".format(node)
+      current = min(adjF, key = lambda x: x[1])[0]
       notCheckedNodes.remove(current)
+      # print("current: ", current, "\nnotCheckedNodes: ", notCheckedNodes, "\ncheckedNodes: ", checkedNodes)
 
       # Se o nó atual é o nó destino, retorna o caminho
       if(current == destinyNode):
@@ -119,10 +120,11 @@ class Graph:
 
       # Testa o g dos vizinhos do nó atual
       for neighbor, _ in self.get_adjacents(current):
-        # Soma o g do nó atual com o peso da aresta entre o nó atual e o nó vizinho
+        # Soma o g do nó atual com o peso da aresta entre o nó atual e o nó vizinho => distância entre o nó vizinho e a origem passando pelo nó atual
         gResult = g[current] + self.find_g(current, neighbor)
-
-        # Se o resultado da soma for menor que o g ataul do vizinho, então este é o menor caminho já feito até esse nó
+        
+        # Se o resultado da soma for menor que o g atual do vizinho, então este é o menor caminho já feito até esse nó
+        # Evita loops, quando voltar para o nó anterior for melhor que ir para outro nó
         if(gResult < g[neighbor]):
           checkedNodes[neighbor] = current
           g[neighbor] = gResult
@@ -145,10 +147,12 @@ class Graph:
 
   def a_star_path(self, checkedNodes, current):
     path = [current]
+    totalDistance = 0
     while current in checkedNodes:
+      totalDistance += [v[1] for v in self.get_adjacents(current) if(v[0] == checkedNodes[current])][0]
       current = checkedNodes[current]
       path.insert(0, current)
-    return path
+    return (totalDistance, path)
 
   def __len__(self):
     return len(self.adjacents)
@@ -159,61 +163,69 @@ class Graph:
   def __getitem__(self, v):
     return self.adjacents[v]
 
-citiesRelations = [
-  ("Arad", ("Zerind", 75)), 
-  ("Arad", ("Timisoara", 118)), 
-  ("Arad", ("Sibiu", 140)), 
-  ("Zerind", ("Oradea", 71)),
-  ("Sibiu", ("Oradea", 151)), 
-  ("Sibiu", ("Fagaras", 99)),
-  ("Sibiu", ("Rimnicu Vilcea", 80)),
-  ("Timisoara", ("Lugoj", 111)), 
-  ("Fagaras", ("Bucharest", 211)), 
-  ("Rimnicu Vilcea", ("Craiova", 146)),
-  ("Rimnicu Vilcea", ("Pitesti", 97)), 
-  ("Lugoj", ("Mehadia", 70)), 
-  ("Mehadia", ("Dobreta", 75)),
-  ("Dobreta", ("Craiova", 120)), 
-  ("Craiova", ("Pitesti", 138)),
-  ("Pitesti", ("Bucharest", 80)),
-  ("Bucharest", ("Giurgiu", 90)),
-  ("Bucharest", ("Urziceni", 85)), 
-  ("Urziceni", ("Vaslui", 142)),
-  ("Urziceni", ("Hirsova", 98)), 
-  ("Hirsova", ("Eforie", 86)),
-  ("Vaslui", ("Iasi", 92)),
-  ("Iasi", ("Neamt", 87))
-]
+if __name__ == "__main__":
+  citiesRelations = [
+    ("Arad", ("Zerind", 75)), 
+    ("Arad", ("Timisoara", 118)), 
+    ("Arad", ("Sibiu", 140)), 
+    ("Zerind", ("Oradea", 71)),
+    ("Sibiu", ("Oradea", 151)), 
+    ("Sibiu", ("Fagaras", 99)),
+    ("Sibiu", ("Rimnicu Vilcea", 80)),
+    ("Timisoara", ("Lugoj", 111)), 
+    ("Fagaras", ("Bucharest", 211)), 
+    ("Rimnicu Vilcea", ("Craiova", 146)),
+    ("Rimnicu Vilcea", ("Pitesti", 97)), 
+    ("Lugoj", ("Mehadia", 70)), 
+    ("Mehadia", ("Dobreta", 75)),
+    ("Dobreta", ("Craiova", 120)), 
+    ("Craiova", ("Pitesti", 138)),
+    ("Pitesti", ("Bucharest", 101)),
+    ("Bucharest", ("Giurgiu", 90)),
+    ("Bucharest", ("Urziceni", 85)), 
+    ("Urziceni", ("Vaslui", 142)),
+    ("Urziceni", ("Hirsova", 98)), 
+    ("Hirsova", ("Eforie", 86)),
+    ("Vaslui", ("Iasi", 92)),
+    ("Iasi", ("Neamt", 87))
+  ]
 
-citiesMap = Graph(citiesRelations, False, True)
+  citiesMap = Graph(citiesRelations, False, True)
 
-# print(citiesMap.get_vertices())
-# print(citiesMap.get_vertices_relation())
-# print(citiesMap.get_adjacents("Arad"))
-print(citiesMap.bf_search("Arad", "Bucharest"))
+  # print(citiesMap.get_vertices())
+  # print(citiesMap.get_vertices_relation())
+  # print(citiesMap.get_adjacents("Arad"))
+  # print(citiesMap.bf_search("Arad", "Bucharest"))
 
-# Distância em linha reta até Bucharest
-h = [
-  ("Arad", 366),
-  ("Bucharest", 0),
-  ("Craiova", 160),
-  ("Dobreta", 242),
-  ("Eforie", 161),
-  ("Fagaras", 178),
-  ("Giurgiu", 77),
-  ("Hirsova", 151),
-  ("Iasi", 226),
-  ("Logoj", 244),
-  ("Mehadia", 241),
-  ("Neamt", 234),
-  ("Oradea", 380),
-  ("Pitesti", 98),
-  ("Rimnicu Vilcea", 193),
-  ("Sibiu", 253),
-  ("Timisoara", 329),
-  ("Urziceni", 80),
-  ("Vaslui", 199),
-  ("Zerind", 374)
-]
+  # Distância em linha reta até Bucharest
+  h = [
+    ("Arad", 366),
+    ("Bucharest", 0),
+    ("Craiova", 160),
+    ("Dobreta", 242),
+    ("Eforie", 161),
+    ("Fagaras", 178),
+    ("Giurgiu", 77),
+    ("Hirsova", 151),
+    ("Iasi", 226),
+    ("Lugoj", 244),
+    ("Mehadia", 241),
+    ("Neamt", 234),
+    ("Oradea", 380),
+    ("Pitesti", 98),
+    ("Rimnicu Vilcea", 193),
+    ("Sibiu", 253),
+    ("Timisoara", 329),
+    ("Urziceni", 80),
+    ("Vaslui", 199),
+    ("Zerind", 374)
+  ]
 
-print(citiesMap.a_star_search("Arad", "Bucharest", h))
+  # print(citiesMap.a_star_search("Timisoara", "Bucharest", h))
+
+  destiny = "Bucharest"
+  for city, _ in h:
+    res = citiesMap.a_star_search(city, destiny, h)
+    print(f"Distância total:{res[0] : {4}} Km", end = " | ")
+    for x in res[1]:
+      print(x, end = " -> ") if x != destiny else print(x)
