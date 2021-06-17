@@ -83,7 +83,7 @@ class Graph:
 
   # Busca A*
   # f(n) = g(n) + h(n)
-    #   g(n) -> distância entre nó atual (n) e o nó de origem
+    #   g(n) -> Menor distância entre nó atual (n) e nó de origem
     #   h(n) -> Distância em linha reta até nó destino
   def a_star_search(self, originNode, destinyNode, h):
     notCheckedNodes = [originNode] # Nós que ainda não foram averiguados
