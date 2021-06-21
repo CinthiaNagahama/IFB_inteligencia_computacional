@@ -142,8 +142,8 @@ class Graph:
       return "{} não tem relação direta com {}".format(neighbor, node) if(len(g) == 0) else g.pop(0)
 
   def find_h(self, node, h):
-    h = [v[1] for v in h if(v[0] == node)]
-    return "{} não está presente em h".format(node) if(len(h) == 0) else h[0]
+    _h = [v[1] for v in h if(v[0] == node)]
+    return "{} não está presente em h".format(node) if(len(_h) == 0) else _h.pop(0)
 
   def a_star_path(self, checkedNodes, current):
     path = [current]
